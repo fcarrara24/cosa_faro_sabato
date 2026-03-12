@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/bergamo_events
+      - PYTHONPATH=/app
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+    networks:
+      - bergamo-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=bergamo_events
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - bergamo-network
+
+  # Optional: Add pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@bergamoevents.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+    networks:
+      - bergamo-network
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  bergamo-network:
+    driver: bridge
