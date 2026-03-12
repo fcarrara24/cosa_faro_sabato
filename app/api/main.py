@@ -30,6 +30,11 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     create_tables()
+    
+    # Start the scheduler
+    from app.scheduler.scheduler import get_scheduler
+    scheduler = get_scheduler()
+    scheduler.start()
 
 
 # Dependency to get event service
@@ -274,14 +279,20 @@ async def get_stats(
 async def health_check():
     """Detailed health check"""
     try:
-        # Check database connection
+        # Check database connection using the same engine as the app
         from app.database.db import engine
+        from sqlalchemy import text
+        
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            if "sqlite" in str(engine.url):
+                conn.execute(text("SELECT 1"))
+            else:
+                conn.execute(text("SELECT 1"))
         
         return {
             "status": "healthy",
             "database": "connected",
+            "database_type": "sqlite" if "sqlite" in str(engine.url) else "postgresql",
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:

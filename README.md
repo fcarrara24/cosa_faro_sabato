@@ -71,13 +71,53 @@ bergamo-events-finder/
 
 ## 🚀 Avvio Rapido
 
-### 1. Docker (Consigliato)
+### ⚡ Avvio Veloce (Per il tuo sistema)
 
 ```bash
-# Clone repository
-git clone <repository-url>
-cd bergamo-events-finder
+# Se hai già seguito i passaggi iniziali, basta:
+source venv/bin/activate && python main.py
 
+# Se è la prima volta, segui la guida completa sotto
+```
+
+### 1. Sviluppo Locale (Consigliato per il tuo sistema)
+
+```bash
+# Clone repository (se non già fatto)
+# cd bergamo-events-finder
+
+# 1. Installa dipendenze Python (se non già fatto)
+sudo apt update && sudo apt install -y python3-venv python3-pip python3-full
+
+# 2. Crea e attiva virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Installa dipendenze del progetto
+pip install -r requirements.txt
+
+# 4. Installa browser Playwright per crawling
+playwright install chromium
+
+# 5. Configura ambiente (usa SQLite per sviluppo)
+cp .env.example .env
+# Il file .env è già configurato per SQLite
+
+# 6. Inizializza database
+python init_db.py
+
+# 7. Avvia applicazione
+python main.py
+```
+
+**Accesso Sistema:**
+- API: http://localhost:8000
+- Documentazione: http://localhost:8000/docs
+- Health Check: http://localhost:8000/health
+
+### 2. Docker (Richiede Docker funzionante)
+
+```bash
 # Copia configurazione ambiente
 cp .env.example .env
 
@@ -89,20 +129,56 @@ docker-compose up -d
 # Database (pgAdmin): http://localhost:5050 (se abilitato)
 ```
 
-### 2. Sviluppo Locale
+### 3. Comandi Utili per Sviluppo
 
 ```bash
-# Installa dipendenze
-pip install -r requirements.txt
+# Verifica stato applicazione
+curl http://localhost:8000/health
 
-# Installa browser Playwright
-playwright install chromium
+# Test ricerca eventi
+curl "http://localhost:8000/events"
 
-# Avvia database PostgreSQL
-# oppure usa SQLite modificando .env
+# Test ricerca full-text
+curl "http://localhost:8000/events/search?q=jazz"
 
-# Avvia applicazione
-python main.py
+# Ferma applicazione
+pkill -f "python main.py"
+
+# Riavvia applicazione
+source venv/bin/activate && python main.py
+```
+
+### 4. Risoluzione Problemi Comuni
+
+**❌ Errore: "externally-managed-environment"**
+```bash
+# Installa pacchetti Python di sistema
+sudo apt install python3-venv python3-pip python3-full
+```
+
+**❌ Errore: "permission denied while trying to connect to docker API"**
+```bash
+# Usa sviluppo locale invece di Docker
+source venv/bin/activate && python main.py
+```
+
+**❌ Errore: "No such file or directory: .env.example"**
+```bash
+# Il file .env.example è già stato creato, usa direttamente:
+echo "DATABASE_URL=sqlite:///./bergamo_events.db" > .env
+```
+
+**❌ Errore: Database non trovato**
+```bash
+# Inizializza database manualmente
+python init_db.py
+```
+
+**✅ Verifica Installazione**
+```bash
+# Controlla che tutto funzioni
+curl http://localhost:8000/health
+# Dovrebbe restituire: {"status":"healthy","database":"connected",...}
 ```
 
 ## 📡 API Endpoints
